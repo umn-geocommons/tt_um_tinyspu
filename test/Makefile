@@ -9,7 +9,7 @@ PROJECT_SOURCES = \
 	main.v \
 	DemoBench.v \
 	tt_um_tinyspu.v \
-	op-attreclass.v \
+	op-attrreclass.v \
 	op-basicbuffer.v \
 	op-distdir.v \
 	op-dotproduct.v \
