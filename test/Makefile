@@ -5,7 +5,28 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
+PROJECT_SOURCES = \
+	main.v \
+	DemoBench.v \
+	tt_um_tinyspu.v \
+	op-attreclass.v \
+	op-basicbuffer.v \
+	op-distdir.v \
+	op-dotproduct.v \
+	op-eqgate.v \
+	op-focalmaxpoolrow.v \
+	op-focalmaxrow.v \
+	op-focalmeanrow.v \
+	op-focalsumrow.v \
+	op-localcodeop.v \
+	op-localdiv.v \
+	op-mhdist8.v \
+	op-mingate.v \
+	op-nop.v \
+	op-normdiffindex.v \
+	op-onemn.v \
+	op-vectorboxarea.v \
+	op-zeromn.v
 
 ifneq ($(GATES),yes)
 
