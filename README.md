@@ -25,22 +25,22 @@ How do you program a SPU? With a spatial instruction set architecture (SISA), of
 
 | Opcode | Mnemonic | Description |
 |--------|---------|-----------|
-| `0000` | [NOP](#0000-nop) | No Operation does nothing. |
-| `0001` | [MinGate](#0001-mingate) | Search for minimum value, output min value and index location. |
-| `0010` | [EqGate](#0010-eqgate) | Search for exact value, output value and index location, if found |
-| `0011` | [ZeroMN](#0011-zeromn) | Output 0 for M and N. |
-| `0100` | [DistDir](#0100-distdir) | Computes the Manhattan Distance (M) and direction (N). |
-| `0101` | [VectorBoxArea](#0101-vectorboxarea) | Compute area (M) and perimeter (N). |
-| `0110` | [BasicBuffer](#0110-basicbuffer) | Add a buffer distance to a line segment. |
-| `0111` | [AttrReclass](#0111-attrreclass) | Reclassifies values into up to 3 classes. |
-| `1000` | [FocalMeanRow](#1000-focalmeanrow) | Computes the mean of 3 values across a row (ABC for M, BCD for N) |
-| `1001` | [FocalSumRow](#1001-focalsumrow) | Computes the sum of 3 values across a row (ABC for M, BCD for N) |
-| `1010` | [LocalDiv](#1010-localdiv) | Divides values in pairs (M = A/C, N = B/D) |
-| `1011` | [FocalMaxPoolRow](#1011-focalmaxpoolrow) | Partial calculation for MaxPool (used in geoAI; M = max(A,B), N = max(C,D)) |
-| `1100` | [NormDiffIndex](#1100-normdiffindex) | Computes the normalized difference index. |
-| `1101` | [LocalCodeOp](#1101-localcodeop) | Applies bitwise or arithmetic operations. |
-| `1110` | [MHDist8](#1110-mhdist8) | Computes the Manhattan Distance with higher precision. |
-| `1111` | [DotProduct](#1111-dotproduct) | Computes the dot product with sum accumulation (used in geoAI). |
+| `0000` | [NOP](docs/info.md#0000-nop) | No Operation does nothing. |
+| `0001` | [MinGate](docs/info.md#0001-mingate) | Search for minimum value, output min value and index location. |
+| `0010` | [EqGate](docs/info.md#0010-eqgate) | Search for exact value, output value and index location, if found |
+| `0011` | [ZeroMN](docs/info.md#0011-zeromn) | Output 0 for M and N. |
+| `0100` | [DistDir](docs/info.md#0100-distdir) | Computes the Manhattan Distance (M) and direction (N). |
+| `0101` | [VectorBoxArea](docs/info.md#0101-vectorboxarea) | Compute area (M) and perimeter (N). |
+| `0110` | [BasicBuffer](docs/info.md#0110-basicbuffer) | Add a buffer distance to a line segment. |
+| `0111` | [AttrReclass](docs/info.md#0111-attrreclass) | Reclassifies values into up to 3 classes. |
+| `1000` | [FocalMeanRow](docs/info.md#1000-focalmeanrow) | Computes the mean of 3 values across a row (ABC for M, BCD for N) |
+| `1001` | [FocalSumRow](docs/info.md#1001-focalsumrow) | Computes the sum of 3 values across a row (ABC for M, BCD for N) |
+| `1010` | [LocalDiv](docs/info.md#1010-localdiv) | Divides values in pairs (M = A/C, N = B/D) |
+| `1011` | [FocalMaxPoolRow](docs/info.md#1011-focalmaxpoolrow) | Partial calculation for MaxPool (used in geoAI; M = max(A,B), N = max(C,D)) |
+| `1100` | [NormDiffIndex](docs/info.md#1100-normdiffindex) | Computes the normalized difference index. |
+| `1101` | [LocalCodeOp](docs/info.md#1101-localcodeop) | Applies bitwise or arithmetic operations. |
+| `1110` | [MHDist8](docs/info.md#1110-mhdist8) | Computes the Manhattan Distance with higher precision. |
+| `1111` | [DotProduct](docs/info.md#1111-dotproduct) | Computes the dot product with sum accumulation (used in geoAI). |
 
 
 ## The beginning... GIS on chips.
