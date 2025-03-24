@@ -70,7 +70,7 @@ The following 16 spatial opcodes can be used to create a multitude of spatial me
 
 ## Control SPU Ops
 
----
+Note: Due to architecture limitations, TinySPU does not account for decimal results and overflows. It rounds down and truncates overflow to lower 4 bits as default behavior. There are no warnings/flags.
 
 ### <h3 id="0000-nop">0000 - NOP (No Operation)</h3>
 **Description:**  
@@ -144,7 +144,7 @@ N = Direction: N=0, NE=1, E=2, SE=3, S=4, SW=5, W=6, NW=7
 **Example:**
 ```
 Input:  A = 6, B = 2, C = 1, D = 5  
-Output: M = 8, N = 3
+Output: M = 8, N = 7
 ```
 
 ---
@@ -166,31 +166,31 @@ Output: M = 8, N = 12
 
 ### <h3 id="0110-basicbuffer">0110 - BasicBuffer</h3>
 **Description:**  
-Buffers input values into M (X) and N (Y) for processing.
+Performs a basic spatial buffer of 2 units. Takes input of points on a rectangle traveling in a counterclockwise direction. Then, buffers the first set of points two units outwards into M (X) and N (Y).
 
-M = [A, B]  
-N = [C, D]
+M = X_buffered
+N = Y_buffered
  
 **Example:**
 ```
-Input:  A = 2, B = 3, C = 4, D = 5  
-Output: M = [2 3], N = [4 5]
+Input:  A = 3, B = 3, C = 6, D = 3 (Lower-Left --> Lower-Right)
+Output: M = 1, N = 1 (Lower-Left Buffered by 2 units)
 ```
 
 ---
 
 ### <h3 id="0111-attrreclass">0111 - AttrReclass</h3>
 **Description:**  
-Reclassifies values into different groups.
+Reclassifies values into different groups, splits into 2 or 3 classes.
 
-M = [A, B, C, D]  
-N = [A, C]
+M = 3 classes. if C > A --> 1; if C < B --> 3; if C <= A and C >= B --> 2      
+N = 2 classes. if C >= D --> 0; if C < D --> 5
  
 **Example:**
 ```
-Input:  A = 1, B = 3, C = 5, D = 7  
-Output: M = [1, 3, 5, 7]  
-        N = [1, 5]
+Input:  A = 5, B = 2, C = 4, D = 7  
+Output: M = 2
+        N = 5
 ```
 
 ---
@@ -199,9 +199,9 @@ Output: M = [1, 3, 5, 7]
 
 ### <h3 id="1000-focalmeanrow">1000 - FocalMeanRow</h3>
 **Description:**  
-Computes the mean of three consecutive values in a row.
+Computes the mean of three values.
 
-M = (A + B + C) / 3
+M = (A + B + C) / 3     
 N = (B + C + D) / 3 
  
 **Example:**
@@ -214,7 +214,7 @@ Output: M = 6, N = 9
 
 ### <h3 id="1001-focalsumrow">1001 - FocalSumRow</h3>
 **Description:**  
-Computes the sum of three consecutive values in a row.
+Computes the sum of three values.
 
 M = A + B + C  
 N = B + C + D
@@ -222,14 +222,14 @@ N = B + C + D
 **Example:**
 ```
 Input:  A = 3, B = 6, C = 9, D = 12  
-Output: M = 18, N = 27
+Output: M = 18 (overflows to 2), N = 27 (overflows to 11)
 ```
 
 ---
 
 ### <h3 id="1010-localdiv">1010 - LocalDiv</h3>
 **Description:**  
-Divides values in pairs.
+Divides values (integer output).
 
 M = A / C  
 N = B / D
@@ -246,15 +246,15 @@ Output: M = 4, N = 4
 
 ### <h3 id="1100-normdiffindex">1100 - NormDiffIndex</h3>
 **Description:**  
-Computes the normalized difference index.
+Computes the normalized difference index. Output is scaled to -1.0 to 1.0 stepping by 0.125. To avoid fractional values, it is scaled uniquely.
 
-M = (A - C) / (A + C)  
-N = (B - D) / (B + D)
+M = (A - C) / (A + C) --> with scaling --> ((((A - C)*16)*8) / ((A + C)*16)) + 8    
+N = (B - D) / (B + D) --> with scaling --> ((((B - D)*16)*8) / ((B + D)*16)) + 8
  
 **Example:**
 ```
 Input:  A = 6, B = 8, C = 4, D = 2  
-Output: M = 0.2, N = 0.6
+Output: M = 9 (actual: 0.2 --> round down --> 0.125), N = 12 (actual: 0.6 --> round down --> 0.5)
 ```
 
 ---
@@ -264,7 +264,7 @@ Output: M = 0.2, N = 0.6
 Applies bitwise or arithmetic operations. 
 
 Upper bits of D is Op1, Lower bits of D is Op2.         
-00=&, 01=|, 10=+, 11=*
+Operation codes: 00=&, 01=|, 10=+, 11=*
 
 
 M = A (Op1) B  
@@ -272,9 +272,9 @@ N = (A (Op1) B) (Op2) C
 
 **Example:**
 ```
-Input:  A = 5, B = 3, C = 7, Op1 = &, Op2 = +  
-Output: M = 1  
-        N = 8
+Input:  A = 5 (0101), B = 3 (0011), C = 7 (0111), Op1 = &, Op2 = + (D = 0010)
+Output: M = 1 (0001)
+        N = 8 (1000)
 ```
 
 ---
@@ -290,32 +290,50 @@ N = Low bits of Manhattan Distance
  
 **Example:**
 ```
-Input:  A = 8, B = 5, C = 2, D = 1  
-Output: M = High bits, N = Low bits
+Input:  A = 14, B = 12, C = 2, D = 1  
+Output: 23 (0001 0111) M = 1 (0001), N = 7 (0111)
 ```
 
 ---
 
 ### <h3 id="1111-dotproduct">1111 - DotProduct</h3>
 **Description:**  
-Computes the dot product with sum accumulation.
+Computes the dot product with sum accumulation. A B are multiplied in dot product, C D represent a split 8-bit integer added into the result of A * B.
 
-M = High 4-bits of dot product  
-N = Low 4-bits of dot product
+result = A * B + {C, D}   
+M = High 4-bits of result       
+N = Low 4-bits of result
  
 **Example:**
 ```
-Input:  A = 2, B = 3, C = 4, D = 5  
-Output: M = High 4-bits  
-        N = Low 4-bits
+Input:  A = 3, B = 4, C = 1 (0001), D = 2 (0010); {C, D} = 18 (0001 0010)
+Output: result = 3 * 4 + 18 = 30 (0001 1110)
+        M = 1 (0001)
+        N = 14 (1110)
 ```
 
-
-
-
-
 ## TinySPU ISA Q Mux
-### **Control Input**
+
+The TinySPU Q Mux is designed to update the values of A B C D registers before performing operations. Typically, this is used with a NOP opcode (0000) to easily transfer values into the registers.
+
+Values can be loaded from UIO wire or the output M and N registers.
+
+### Q Mux categories
+
+| QMux | Category |
+|--------|-----------------|
+| `00xx` | zero out CD, AB, or ABCD |
+| `01xx` | select UIO as Input |
+| `10xx` | select MN as Input |
+| `11xx` | reserved/open |
+| `xx01` | take input and select CD as Output |
+| `xx10` | take input and select AB as Output |
+| `xx11` | take input and duplicate A/C=high, B/D=low |
+| `xx11` | take input and duplicate, but this time A/B=high, B/D=low |
+
+### **Q Mux Codes**
+
+Note: X/Y --> duplicate; X and Y get same input value.
 
 **0000 NoIO**   
 A/B/C/D \= Maintain Value of all INP  
@@ -348,7 +366,7 @@ B/D \= UIO Low
 
 ### **MN In (10xx)**
 
-**1000 MNACBD**     
+**1000 MNACBD**         
 A/B \= M  
 C/D \= N  
 
