@@ -38,7 +38,7 @@ module main;
     localparam [3:0] OP_DOTPRODUCT    = 4'b1111;
 
     // Instantiate the DUT (using your original DUT module)
-    tt_um_tinyspu dut (
+    tt_umn_tinyspu dut (
         .ui_in(ui_in),
         .uo_out(uo_out),
         .uio_in(uio_in),
@@ -49,8 +49,8 @@ module main;
         .rst_n(rst_n)
     );
 
-    // Clock generation: toggle every 10ns (50 MHz)
-    always #10 clk = ~clk;
+    // Clock generation: toggle every 50ns
+    always #50 clk = ~clk;
 
     // Task to run an individual test:
     // It loads A/B and C/D using the Q-mux, applies the operation, then checks outputs.
@@ -64,7 +64,7 @@ module main;
             Q = Q_AB_LOAD;                   // Q command for loading A and B
             ui_in  = {4'b0000, Q};           // No operation; just loading registers via Q
             uio_in = {A, B};                 // Place A in upper 4 bits, B in lower 4 bits
-            #40;                             // Wait for data propagation
+            repeat(3) @(posedge clk);                             // Wait for data propagation
 
             // --- Load C and D ---
             C = C_val;
@@ -72,13 +72,13 @@ module main;
             Q = Q_CD_LOAD;                   // Q command for loading C and D
             ui_in  = {4'b0000, Q};           // No operation; just loading registers via Q
             uio_in = {C, D};                 // Place C in upper 4 bits, D in lower 4 bits
-            #40;                             // Wait for data propagation
+            repeat(3) @(posedge clk);                             // Wait for data propagation
 
             // --- Execute the operation ---
             Op = Op_val;
             Q  = 4'b0000;                   // Q=0 ensures no register update during op
             ui_in = {Op, Q};                // Apply the operation
-            #40;                            // Allow time for processing
+            repeat(3) @(posedge clk);                             //Wait for data to propagate
 
             // --- Check the outputs ---
             if (uo_out[7:4] === Expected_M && uo_out[3:0] === Expected_N) begin
@@ -94,7 +94,7 @@ module main;
                 $display(" ");
             end
 
-            #20; // Optional delay between tests
+            @(posedge clk); // Optional delay between tests
         end
     endtask
 
@@ -108,11 +108,11 @@ module main;
         uio_in = 8'b0;
 
         // Reset pulse sequence
-        #50 rst_n = 0;
-        #50 rst_n = 1;
+        repeat(3) @(posedge clk) rst_n = 0;
+        repeat(3) @(posedge clk) rst_n = 1;
 
         // Enable the design
-        #30 ena = 1;
+        repeat(2) @(posedge clk) ena = 1;
         $display("Starting testbench...");
         $display("For vector operations: A, B correspond to point coordinate (x1, y1); C, D correspond to point coordinate (x2, y2)");
         
@@ -130,7 +130,7 @@ module main;
         run_test(4'd1, 4'd2, 4'd3, 4'd4, OP_ZEROMN,        4'd1, 4'd0); //NOP with incorrect M
         run_test(4'd1, 4'd2, 4'd3, 4'd4, OP_NOP,           4'd0, 4'd1); //NOP with incorrect N
         run_test(4'd1, 4'd2, 4'd3, 4'd4, OP_NOP,           4'd1, 4'd1); //NOP with both M & N incorrect
-        run_test(4'd1, 4'd2, 4'd3, 4'd4, OP_EQGATE,         4'd0, 4'd1); //OneMN with M incorrect
+        run_test(4'd1, 4'd2, 4'd3, 4'd4, OP_EQGATE,        4'd0, 4'd1); //OneMN with M incorrect
         run_test(4'd2, 4'd2, 4'd4, 4'd4, OP_DISTDIR,       4'd0, 4'd0); //DistDir with M and N incorrect
         
         
@@ -432,8 +432,7 @@ module main;
 
         $display(" ");
         $display("All tests completed!");
-       
-        $stop;
+        $finish;
     end
 
 endmodule
